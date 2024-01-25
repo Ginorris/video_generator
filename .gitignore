@@ -7,6 +7,9 @@ media/video_templates/*
 media/videos/*
 media/to_post/*
 
+# database
+media/misc/db.csv
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
