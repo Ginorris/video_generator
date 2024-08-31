@@ -1,4 +1,3 @@
-import os
 import random
 import pyttsx3
 import whisper
@@ -6,14 +5,12 @@ import csv
 import torch
 import pandas as pd
 from datetime import timedelta
-# from pathlib import Path
-# from openai import OpenAI
-import praw
 from praw.models import MoreComments
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeAudioClip, ImageClip
 from moviepy.video.io.VideoFileClip import VideoFileClip # why 2 VideoFileClip
 from moviepy.video.tools.subtitles import SubtitlesClip
@@ -21,16 +18,8 @@ from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.all import crop
 
 
-def get_text(database, n_videos, limit):
+def get_text(reddit, database, n_videos, limit):
     # get posts
-    reddit = praw.Reddit(
-        client_id=os.getenv('REDDIT_APP_ID'),
-        client_secret=os.getenv('REDDIT_APP_SECRET'),
-        password=os.getenv('REDDIT_PASSWORD'),
-        user_agent=os.getenv('REDDIT_USER_AGENT'),
-        username=os.getenv('REDDIT_USERNAME'),
-    )
-    
     posts = []
     df = pd.read_csv(database)
 
@@ -65,15 +54,28 @@ def get_text(database, n_videos, limit):
     return posts[:n_videos]
 
 
+def check_text():
+    # TODO
+    # 1 censor insults - try better-profanity module
+    # erase emojis or unreadable symbols
+    # erase links - perhaps put them in description
+    pass
+
+
 def get_screenshot(post_url, post_id, output_path):
-    # TODO handle timeout exception
-    driver = webdriver.Firefox()
-    driver.get(post_url)
-    search = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, f't3_{post_id}')))
+    # TODO run in background isnt working
+    options = webdriver.FirefoxOptions().add_argument('--headless')
+    driver = webdriver.Firefox(options=options)
+    try:
+        driver.get(post_url)
+        search = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, f't3_{post_id}')))
+    except TimeoutException:
+        driver.quit()
+        return False
     with open(output_path, 'wb') as file:
         file.write(search.screenshot_as_png)
-    # driver.close()
     driver.quit()
+    return True
 
 
 def generate_audio(text, output_path):
@@ -84,17 +86,12 @@ def generate_audio(text, output_path):
     engine.runAndWait()
 
 
-# def generate_audio(text_path, output_path):
-    # openai tts - paid option
-    # voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-    # let the user know it is an ai generated voice per policy
-    # client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-    # response = client.audio.speech.create(
-    #     model='tts-1',
-    #     voice='alloy',
-    #     input=text_file.read()
-    # )
-    # response.stream_to_file(os.path.join(output_path, audiofile_name))
+def combine_audio(title_path, body_path, output_path):
+    title = AudioFileClip(title_path)
+    body = AudioFileClip(body_path)
+    audio_clip = CompositeAudioClip([title, body.set_start(title.duration)])
+    audio_clip.write_audiofile(output_path, fps=44100)
+    return title.duration, audio_clip.duration
 
 
 def get_subs(audiofile_path, output_path):
@@ -120,13 +117,12 @@ def create_srt(transcribe, output_path):
             srt_section = f'{segment_id}\n{start_time} --> {end_time}\n{text}\n\n'
             to_write.append(srt_section)
 
-    # should be write instead of append
+    # TODO should be write instead of append, see enconding
     with open(output_path, 'a', encoding='utf-8') as srtFile:
         srtFile.write(''.join(to_write))
 
 
 def edit_video(video_path, title_duration, audio_path, sub_path, image_path, output_path):
-    # TODO explore using ffmpeg to edit with gpu
     # open files
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path)
@@ -143,7 +139,7 @@ def edit_video(video_path, title_duration, audio_path, sub_path, image_path, out
     x_center = (video_clip.size[0] - target_width) / 2
     video_clip = video_clip.crop(x1=x_center, x2=x_center + target_width)
 
-    image_clip = image_clip.resize(width=int(target_width * 0.9))
+    image_clip = image_clip.resize(width=int(target_width * 0.8))
 
     # combine and write output file
     final_video = CompositeVideoClip([video_clip.set_audio(audio_clip), subtitles_clip, image_clip])
@@ -162,7 +158,10 @@ def edit_video(video_path, title_duration, audio_path, sub_path, image_path, out
 
 
 def save_id(database, post_id, comment_id):
-    # TODO use pandas
     with open(database, 'a', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=['post_id', 'comment_id'])
         writer.writerow({'post_id': post_id, 'comment_id': comment_id})
+
+
+def upload_to_drive():
+    pass
