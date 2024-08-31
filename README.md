@@ -25,16 +25,6 @@ Change pytube innertube.py file to fix age restriction error in get_videos.py:
 
 Create .env file and set the variables listed in .env.example 
 
-what the media directories should look like:
-
-    media/
-    --misc/
-        --db.csv
-        --Font_file
-    --temp/
-    --video_templates/
-    --videos/
-
 yt-dlp ussage:
 
     yt-dlp --yes-playlist -o "PATH/TO/SAVE_FOLDER/%(title)s.%(ext)s" "YOUTUBE_PLAYLIST_URL"
