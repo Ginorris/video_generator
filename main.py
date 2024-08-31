@@ -1,27 +1,29 @@
-from source.utils import *
 import os
-import praw
-from dotenv import load_dotenv
-from moviepy.config import change_settings
-
-
-load_dotenv(os.path.join(os.getcwd(), 'config/.env'))
-change_settings({'IMAGEMAGICK_BINARY': os.getenv('IMAGEMAGIK_PATH')})
-
-# Constants definitios
-MEDIA_PATH = os.path.join(os.getcwd(), 'media')
-RAW_PATH = os.path.join(MEDIA_PATH, 'video_templates')
-TEMP_PATH = os.path.join(MEDIA_PATH, 'temp')
-FINAL_PATH = os.path.join(MEDIA_PATH, 'videos')
-REDDIT = praw.Reddit(
-    client_id=os.getenv('REDDIT_APP_ID'),
-    client_secret=os.getenv('REDDIT_APP_SECRET'),
-    password=os.getenv('REDDIT_PASSWORD'),
-    user_agent=os.getenv('REDDIT_USER_AGENT'),
-    username=os.getenv('REDDIT_USERNAME'),
+import random
+from source.constants import (
+    # RAW_PATH can be a command line argument or just be a folder outside the project (see .env)
+    # same with FINAL_PATH
+    RAW_PATH, TEMP_PATH, FINAL_PATH, REDDIT, DB_PATH, REQUEST_LIMIT
 )
-DB_PATH = os.path.join(MEDIA_PATH, 'misc', 'db.csv')
-REQUEST_LIMIT = 100
+from source.utils import (
+    get_text, get_screenshot, generate_audio, 
+    combine_audio, get_subs, edit_video, save_id
+)
+
+
+# TODO s
+### project management ### 
+# Modify the code structure to keep the main.py as consice and straightforward as possible
+# move the media/misc/ folder and or files to another dir
+# impprove abstraction and add docstrings to functions
+# maybe add a TODO s par in the README.md
+
+### features ###
+# there is a temp faile being created in the project root
+# Preproces comment text and final subtitles to escape especial chars and censor insults
+# implemnt google drive uploading with upload.py
+
+# perhaps add as a command line argument -n=1 or --n_videos=1
 
 NUMBER_OF_VIDEOS = 1
 
@@ -31,6 +33,7 @@ def main():
     for idx, submission in enumerate(posts):
         # submission['comment'].body = check_text(submission['comment'].body)
         id = submission['post'].id
+        # get_paths()?
         screenshot_path = os.path.join(TEMP_PATH, f'{id}_screenshot.png')
         title_audio_path = os.path.join(TEMP_PATH, f'{id}_title.mp3')
         body_audio_path = os.path.join(TEMP_PATH, f'{id}_body.mp3')
