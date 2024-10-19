@@ -9,6 +9,10 @@ from source.utils import (
     get_text, get_screenshot, generate_audio, 
     combine_audio, get_subs, edit_video, save_id
 )
+from moviepy.config import change_settings
+
+
+change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})
 
 
 # TODO s
@@ -53,9 +57,10 @@ def main():
         )
 
         get_subs(full_audio_path, subtitle_path)
+        video_template_path = random.choice([f for f in os.listdir(RAW_PATH) if f != '.gitkeep'])
         edit_video(
             # TODO ensure the video has the required lenght w full_audio_duration, see pymediainfo module
-            os.path.join(RAW_PATH, random.choice(os.listdir(RAW_PATH))),
+            os.path.join(RAW_PATH, video_template_path),
             title_duration, 
             full_audio_path, 
             subtitle_path,

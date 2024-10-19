@@ -12,10 +12,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeAudioClip, ImageClip
-from moviepy.video.io.VideoFileClip import VideoFileClip # why 2 VideoFileClip
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.fx.all import crop
 
 
 def get_text(reddit, database, n_videos, limit):
