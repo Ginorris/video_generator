@@ -1,6 +1,9 @@
 VIDEO GENERATOR
 
 Setup
+CUDA Toolkit if nvidia gpu available
+
+The code is compatible with python up to 3.11
 
 run:
 
@@ -17,7 +20,7 @@ Change main.py if ImageMagik not installed in default directory:
 add custom font in media/misc/ to ImageMagik type-ghostscript.xml:
     
   <type name="Montserrat-ExtraBold" format="ttf" glyphs=<PATH_TO_FONT>/> 
-  Note: name can be anything as long as it referenced in main.py edit_video()
+  Note: name can be anything as long as its referenced in main.py edit_video()
 
 Change pytube innertube.py file to fix age restriction error in get_videos.py:
 
