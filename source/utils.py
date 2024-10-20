@@ -4,6 +4,8 @@ import whisper
 import csv
 import torch
 import pandas as pd
+import numpy as np
+from PIL import Image
 from datetime import timedelta
 from praw.models import MoreComments
 from selenium import webdriver
@@ -126,7 +128,7 @@ def edit_video(video_path, title_duration, audio_path, sub_path, image_path, out
     audio_clip = AudioFileClip(audio_path)
     generator = lambda txt : TextClip(txt, font='Montserrat-ExtraBold', fontsize=75, color='white', bg_color='black')
     subtitles_clip = SubtitlesClip(sub_path, generator).set_position(('center', 'center'))
-    image_clip = ImageClip(image_path, duration=title_duration).set_position(('center', 'center'))
+    image = Image.open(image_path)
 
     # edit video
     start_time = random.randint(0, int(video_clip.duration - audio_clip.duration))
@@ -137,7 +139,10 @@ def edit_video(video_path, title_duration, audio_path, sub_path, image_path, out
     x_center = (video_clip.size[0] - target_width) / 2
     video_clip = video_clip.crop(x1=x_center, x2=x_center + target_width)
 
-    image_clip = image_clip.resize(width=int(target_width * 0.8))
+    # image_clip = image_clip.resize(width=int(target_width * 0.8))
+    resized_image = image.resize((int(target_width * 0.8), int(image.height * 0.8)), Image.Resampling.LANCZOS)
+    image_np = np.array(resized_image)
+    image_clip = ImageClip(image_np, duration=title_duration).set_position(('center', 'center'))
 
     # combine and write output file
     final_video = CompositeVideoClip([video_clip.set_audio(audio_clip), subtitles_clip, image_clip])
